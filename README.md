@@ -10,8 +10,8 @@ See the [PyText official presentation](/misc/pres.pptx) (Russian) for more infor
 PyText depends by
 - **Python 3.4** and above – main IDLE;
 - **/Tkinter** – graphical user interface (GUI);
-- **/Pil** which allow you to work with images;
-- **/Os** which allow you to manage with files.
+- **/Pil** allows you to work with images;
+- **/Os** allows you to manage with files.
 
 To install the necessary libraries:
 ```pip3 install -r requirements.txt```
@@ -22,7 +22,7 @@ Download the latest version of the Python [there](https://www.python.org/downloa
 The latest Windows and Linux systems are supported by PyText.
 
 ## Screenshots
-![Main Window (white theme)](/misc/screen.png)
+![Main Window (white theme)](/misc/pics/screen.png)
 
 ## Getting Started
-For end users, the latest Windows and Linux version of PyText is available from this repository. More information for interested users is available from the [PyText official presentation](/misc/pres.pptx) (Russian).
+For end users, the latest Windows and Linux version of PyText is available from this repository. More information for interested users is available from the [PyText official presentation](/misc/docs/pres.pptx) (Russian).
