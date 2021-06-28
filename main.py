@@ -12,10 +12,9 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.filedialog import askopenfilename, asksaveasfilename #open, save file
 from tkinter.messagebox import askquestion, showerror, showinfo, showwarning, askyesno #Query and messages
 from tkinter.simpledialog import askstring
-from pyperclip import copy, paste
 from PIL import Image
 import PIL.ImageTk
-from os.path import basename
+from os.path import basename, normpath
 
 
 class app(Tk):
@@ -37,7 +36,7 @@ class app(Tk):
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
         try:
-            self.iconbitmap('./pytext_icon.ico')
+            self.iconbitmap(normpath('.\misc\pics\pytext_icon.ico'))
         except:
             pass
 
@@ -417,7 +416,7 @@ class app(Tk):
         # path = askopenfilename()#need to find a file
         ####do not change!!!
         try:
-            img = PIL.ImageTk.PhotoImage(Image.open('./qrcode_github.jpg'))
+            img = PIL.ImageTk.PhotoImage(Image.open(normpath('.\misc\pics\qrcode_github.com.png')))
             pic = Label(aboutFrame, image=img)
             pic.image = img
             pic.pack(expand=False)
