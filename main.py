@@ -517,7 +517,6 @@ if __name__ == '__main__':
     parser.add_option('-f', '-F', '--file_in', dest='file_in', type='string', help='Type a name of txt input file to open/create with editor/opens file if it exists or creates a new one/can be combined with -o')
     parser.add_option('-o', '-O', '--file_out', dest='file_out', type='string', help='Type a name of txt output file to create a file with the name you specified/can be combined with -f')
     (opts, args) = parser.parse_args()
-    print(opts, args, len(args))
 
     if opts.file_in != None and opts.file_out != None and len(args) > 0:
         parser.error('Cannot use all together')
