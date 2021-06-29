@@ -362,7 +362,7 @@ class app(Tk):
 
     def file_save_as(self, event=None):
         file_types = [('Text Document', '*.txt'), ('File', '*.*')]   #allowed file types
-        self.get_file_path = asksaveasfilename(filetypes = file_types, defaultextension = file_types, ) #get new file path
+        self.get_file_path = asksaveasfilename(filetypes = file_types, defaultextension = file_types) #get new file path
 
         if self.get_file_path != '':                        #checks for void src
                 self.title('{} PyText editor'.format(basename(self.get_file_path)))
