@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #! -*- coding: UTF-8 -*-
 """
 Docs of PyText editor
@@ -14,7 +15,8 @@ from tkinter.messagebox import askquestion, showerror, showinfo, showwarning, as
 from tkinter.simpledialog import askstring
 from PIL import Image
 import PIL.ImageTk
-from os.path import basename, normpath
+import os
+from os.path import basename, normpath, exists, join
 
 
 class app(Tk):
@@ -141,6 +143,61 @@ class app(Tk):
         self.bind('<Control-Shift-S>', self.file_save_as)
 
         #global binds (any lang) doesnt work/no support from tk
+        self.__check_parse()
+
+    def __check_parse(self):
+        self.get_file_path = os.path.join(os.getcwd(), out_file_name)
+        self.title('{} PyText editor'.format(basename(self.get_file_path)))
+        self.get_file = basename(self.get_file_path)
+        if in_file_name != '' and os.path.exists(os.path.join(os.getcwd(), in_file_name)) and self.get_file != '':
+
+            with open(self.get_file_path, 'w', encoding='utf-8') as f:
+                    f.close()
+            with open(in_file_name, 'r', encoding='utf-8') as f:
+                ftext = f.readlines()
+                on_out_ext = ''.join(ftext)
+            self.text.delete('1.0', END)
+            self.text.insert(END, on_out_ext)
+            self.cur_text = self.text.get('1.0', END)
+            self.text.mark_set(INSERT, '1.0') # set cursor at start
+            self.text.focus() #instead of click
+            with open(self.get_file_path, 'w', encoding='utf-8') as f:
+                    to_write_text = self.text.get('1.0', END).split('\n')
+                    for (ids, line) in enumerate(to_write_text):
+                        to_write_text[ids] += '\n'
+                    f.writelines(to_write_text)
+            self.cur_text = self.text.get('1.0', END)
+            self.file_status = 'SAVED'
+            self.get_file_path = os.path.join(os.getcwd(), out_file_name)
+            self.get_file = basename(self.get_file_path)
+            self.title('{} PyText editor'.format(basename(self.get_file_path)))
+        if in_file_name != '' and os.path.exists(os.path.join(os.getcwd(), in_file_name)) and out_file_name == '':
+            with open(in_file_name, 'r', encoding='utf-8') as f:
+                ftext = f.readlines()
+                on_out_ext = ''.join(ftext)
+            self.text.delete('1.0', END)
+            self.text.insert(END, on_out_ext)
+            self.cur_text = self.text.get('1.0', END)
+            self.text.mark_set(INSERT, '1.0') # set cursor at start
+            self.text.focus() #instead of click
+            self.file_status = 'SAVED'
+            self.get_file_path = os.path.join(os.getcwd(), in_file_name)
+            self.get_file = basename(self.get_file_path)
+            self.title('{} PyText editor'.format(basename(self.get_file_path)))
+
+        if out_file_name != '' and os.path.exists(os.path.join(os.getcwd(), out_file_name)) and in_file_name == '':
+            self.file_status = 'UNSAVED'
+            self.get_file_path = os.path.join(os.getcwd(), out_file_name)
+            self.get_file = basename(self.get_file_path)
+            self.title('{} PyText editor'.format(basename(self.get_file_path)))
+            with open(out_file_name, 'w', encoding='utf-8') as f:
+                f.write('')
+            self.text.delete('1.0', END)
+            self.cur_text = self.text.get('1.0', END)
+            self.text.mark_set(INSERT, '1.0') # set cursor at start
+            self.text.focus() #instead of click
+
+            
 
     def theme_ch(self, *event):
         if self.var_th.get() == 0:
@@ -305,7 +362,7 @@ class app(Tk):
 
     def file_save_as(self, event=None):
         file_types = [('Text Document', '*.txt'), ('File', '*.*')]   #allowed file types
-        self.get_file_path = asksaveasfilename(filetypes = file_types, defaultextension = file_types) #get new file path
+        self.get_file_path = asksaveasfilename(filetypes = file_types, defaultextension = file_types, ) #get new file path
 
         if self.get_file_path != '':                        #checks for void src
                 self.title('{} PyText editor'.format(basename(self.get_file_path)))
@@ -453,5 +510,51 @@ class app(Tk):
 
 
 if __name__ == '__main__':
+    from optparse import OptionParser
+    import re
+
+    parser = OptionParser('usage: %prog [options] args or %prog arg(-f) arg(-o)')
+    parser.add_option('-f', '-F', '--file_in', dest='file_in', type='string', help='Type a name of txt input file to open/create with editor/opens file if it exists or creates a new one/can be combined with -o')
+    parser.add_option('-o', '-O', '--file_out', dest='file_out', type='string', help='Type a name of txt output file to create a file with the name you specified/can be combined with -f')
+    (opts, args) = parser.parse_args()
+    print(opts, args, len(args))
+
+    if opts.file_in != None and opts.file_out != None and len(args) > 0:
+        parser.error('Cannot use all together')
+    #first check existance, then correct
+    # needs diffrent templates?
+    fname_template = re.compile(r'^[.\w\d\s-]+([.]txt){1}$')
+    in_file_name, out_file_name = '', ''
+
+    if opts.file_in != None:
+        if not fname_template.fullmatch(opts.file_in):
+            parser.error('Wrong input file name')
+        else:
+            in_file_name = opts.file_in
+
+    if opts.file_out != None:
+        if not fname_template.fullmatch(opts.file_out):
+            parser.error('Wrong output file name')
+        else:
+            out_file_name = opts.file_out
+
+    if len(args) > 2:
+        parser.error('You gave too much args')
+    if len(args) > 0:
+        if len(args) == 1:
+            if not fname_template.fullmatch(args[0]):
+                parser.error('Wrong first argument')
+            else:
+                in_file_name = args[0]
+        if len(args) == 2:
+            if not fname_template.fullmatch(args[0]):
+                parser.error('Wrong first argument')
+            else:
+                in_file_name = args[0]
+            if not fname_template.fullmatch(args[1]):
+                parser.error('Wrong second argument')
+            else:
+                out_file_name = args[1]
+
     test_app = app()
     test_app.mainloop()
