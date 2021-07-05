@@ -16,7 +16,8 @@ from tkinter.simpledialog import askstring
 from PIL import Image
 import PIL.ImageTk
 import os
-from os.path import basename, normpath, exists, join
+from os.path import basename, normpath, exists
+from posixpath import abspath
 
 
 class app(Tk):
@@ -57,7 +58,7 @@ class app(Tk):
         self.deffonts = [fam for fam in list(families())]
         self.deftypes = ['bold', 'normal']
         self.defsizes = [i for i in range(10, 50, 2)]
-        self.defslants = [ROMAN, ITALIC]
+        self.defslants = ['roman', 'italic']
         self.defundlns = [1, 0]
         #font constants
 
@@ -96,7 +97,7 @@ class app(Tk):
         self.mainMenu.add_cascade(label='Tools', menu=self.toolsMenu)
         self.mainMenu.add_separator()
         self.mainMenu.add_command(label='About', command=self.About)
-        self.var_th = IntVar()
+        self.var_th = IntVar()                                                                              #theme var
         self.var_th.set(0)
         self.mainMenu.add_checkbutton(label='theme', variable=self.var_th, command=self.theme_ch)
         #menu bar
@@ -113,7 +114,7 @@ class app(Tk):
         self.copiedtxt = ''
 
         #global shorcuts bind en
-        self.bind('<Button-3>', self.showPopOut)    #do not change
+        self.bind('<Button-3>', self.show_pop_out)    #do not change
         self.bind('<Control-Key-f>', self.Search)
         self.bind('<Control-Shift-H>', self.Replace)
         self.bind('<Control-Key-a>', self.select_all)
@@ -143,7 +144,13 @@ class app(Tk):
         self.bind('<Control-Shift-S>', self.file_save_as)
 
         #global binds (any lang) doesnt work/no support from tk
+        #global constants
+        self.SS = IntVar()
+        self.SS.set(0)
+        self.FS = 'settings.txt'
+        self.setts_act = {'family':'Curier', 'weight':'normal', 'size':12, 'slant':ROMAN, 'underline':False, 'SS':0, 'var_th':0}
         self.__check_parse()
+        self.settings_save()
 
     def __check_parse(self):
         self.get_file_path = os.path.join(os.getcwd(), out_file_name)
@@ -197,22 +204,79 @@ class app(Tk):
             self.text.mark_set(INSERT, '1.0') # set cursor at start
             self.text.focus() #instead of click
 
+    def check_save_settings(self):
+        if self.SS.get() == 1:
+            self.refresh_setts()
+            self.uploadsettings()
+        else:
+            self.refresh_setts()
+            if exists(abspath(self.FS)):
+                os.remove(self.FS)
+
+    def refresh_setts(self):
+        self.setts_act['family'] = self.deffont.get()
+        self.setts_act['weight'] = self.deftype.get()
+        self.setts_act['size'] = self.defsize.get()
+        self.setts_act['slant'] = self.defslant.get()
+        self.setts_act['underline'] = self.defundln.get()
+        self.setts_act['SS'] = self.SS.get()
+        self.setts_act['var_th'] = self.var_th.get()
+
+    def refresh_font(self):
+        self.deffont.set(self.setts_act['family'])
+        self.deftype.set(self.setts_act['weight'])
+        self.defsize.set(self.setts_act['size'])
+        self.defslant.set(self.setts_act['slant'])
+        self.defundln.set(self.setts_act['underline'])
+        self.defaultfont['family'] = self.deffont.get()
+        self.defaultfont['weight'] = self.deftype.get()
+        self.defaultfont['size'] = self.defsize.get()
+        self.defaultfont['slant'] = self.defslant.get()
+        self.defaultfont['underline'] = self.defundln.get()
+        self.var_th.set(self.setts_act['var_th'])
+
+    def loadsettings(self):
+        with open(self.FS, 'r+', encoding='utf-8') as f:
+            setts = [i.split(':') for i in f.read().split('\n')]
+            del setts[-1]
+            setts = dict(setts)
+            setts['size'] = int(setts['size'])
+            setts['underline'] = int(setts['underline'])
+            setts['SS'] = int(setts['SS'])
+            setts['var_th'] = int(setts['var_th'])
+            self.setts_act = setts.copy()
             
 
+    def uploadsettings(self):
+        with open(self.FS, 'w', encoding='utf-8') as f:
+            f.writelines([f'{k}:{v}\n' for k, v in self.setts_act.items()])
+
+    def settings_save(self):
+        if exists(abspath(self.FS)):
+            self.loadsettings()
+            if self.setts_act['SS'] == 1:
+                self.SS.set(1)
+                self.refresh_font()
+                self.refresh_setts()
+                self.theme_ch()
+                self.uploadsettings()
+        else:
+            self.check_save_settings()
+
     def theme_ch(self, *event):
-        if self.var_th.get() == 0:
+        if self.var_th.get() == 0:                              #white
             self.text.config(insertbackground='#000')
             self.mainMenu.config(bg='#ffffff', fg='#c3d9e5')
             self.PopOutMenu.config(bg='#2d333b', fg='#adbac7')
             self.text.config(bg='#ffffff', fg='#000000')
             
-        elif self.var_th.get() == 1:
+        elif self.var_th.get() == 1:                            #dark
             self.text.config(insertbackground='#fff')
             self.mainMenu.config(bg='#2d333b', fg='#c3d9e5')
             self.PopOutMenu.config(bg='#2d333b', fg='#adbac7')
             self.text.config(bg='#1e2228', fg='#adbac7')
 
-    def showPopOut(self, event):
+    def show_pop_out(self, event):
         self.PopOutMenu.delete(0, END)
         self.PopOutMenu.add_command(label='Select all', command=self.select_all)
         self.PopOutMenu.add_command(label='Copy', command=self.Copy)
@@ -396,6 +460,7 @@ class app(Tk):
         
     def Settings(self, event=None):
         def on_quit():
+            self.check_save_settings()
             settingsFrame.grab_release()
             settingsFrame.destroy()
         ####
@@ -409,6 +474,7 @@ class app(Tk):
         settingsFrame.columnconfigure(2, pad=20, weight=1)
         settingsFrame.columnconfigure(3, pad=20, weight=1)
         settingsFrame.columnconfigure(4, pad=20, weight=1)
+        settingsFrame.columnconfigure(5, pad=20, weight=1)
         settingsFrame.rowconfigure(0, pad=20, weight=1)
         settingsFrame.rowconfigure(1, pad=20, weight=1)
 
@@ -433,22 +499,26 @@ class app(Tk):
         Label(master=settingsFrame, text='Font').grid(row=0, column=0, sticky=EW)
         lbFontSt = OptionMenu(settingsFrame, self.deffont, self.deffont.get(), *self.deffonts, command=font)    #master, def, def init,...
         lbFontSt.grid(row=1, column=0, sticky=NSEW)
-        #Font-style
+        #Font_style
         Label(master=settingsFrame, text='Font style').grid(row=0, column=1, sticky=EW)
         lbFontTp = OptionMenu(settingsFrame, self.deftype, self.deftype.get(), *self.deftypes, command=types)
         lbFontTp.grid(row=1, column=1, sticky=NSEW)
-        #Font-size
+        #Font_size
         Label(master=settingsFrame, text='Size').grid(row=0, column=2, sticky=EW)
         lbFontSz = OptionMenu(settingsFrame, self.defsize, self.defsize.get(), *self.defsizes, command=size)
         lbFontSz.grid(row=1, column=2, sticky=NSEW)
         #Slant
         Label(master=settingsFrame, text='Slant').grid(row=0, column=3, sticky=EW)
-        lbFontSz = OptionMenu(settingsFrame, self.defslant, self.defslant.get(), *self.defslants, command=slant)
-        lbFontSz.grid(row=1, column=3, sticky=NSEW)
-        #UnderLine
+        lbFontSl = OptionMenu(settingsFrame, self.defslant, self.defslant.get(), *self.defslants, command=slant)
+        lbFontSl.grid(row=1, column=3, sticky=NSEW)
+        #Underline
         Label(master=settingsFrame, text='Underline').grid(row=0, column=4, sticky=EW)
-        lbFontSz = OptionMenu(settingsFrame, self.defundln, self.defundln.get(), *self.defundlns, command=underline)
-        lbFontSz.grid(row=1, column=4, sticky=NSEW)
+        lbFontUl = OptionMenu(settingsFrame, self.defundln, self.defundln.get(), *self.defundlns, command=underline)
+        lbFontUl.grid(row=1, column=4, sticky=NSEW)
+        #Check_save_settings
+        Label(master=settingsFrame, text='Auto save').grid(row=0, column=5, sticky=EW)
+        lbSaveSt = Checkbutton(settingsFrame, command=self.check_save_settings, variable=self.SS)
+        lbSaveSt.grid(row=1, column=5, sticky=NSEW)
 
         Button(master=settingsFrame, text='Close', command=on_quit).grid(row=2, column=2, columnspan=2, sticky=NSEW)
         ####
@@ -490,6 +560,7 @@ class app(Tk):
 
 
     def on_exit(self, event=None):
+        self.check_save_settings()
         if self.file_status == 'UNSAVED' or '*' in self.title():
             if self.get_file == '':
                 if self.cur_text != self.text.get('1.0', END):
