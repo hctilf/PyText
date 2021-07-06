@@ -21,7 +21,7 @@ or
 Download the latest version of the Python [there](https://www.python.org/downloads/).
 
 ## Supported OS
-The latest Windows and Linux systems are supported by PyText.
+The latest Windows and Linux systems support PyText.
 
 ## Screenshots
 ![Main Window (white theme)](/misc/pics/Screen1.png)
